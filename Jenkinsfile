@@ -1,30 +1,74 @@
-pipeline {
-    agent any
-
-    environment {
-        // Set environment variables
-        DOCKER_HUB_CREDENTIALS = credentials('5e95b6e4-56b6-4f0b-8142-ac7adc984dbc')
-        DOCKER_IMAGE_NAME = 'maayssaa/hello-world'
+pipeline { 
+2
+    environment { 
+3
+        registry = "https://hub.docker.com/u/maayssaa/test" 
+4
+        registryCredential = '5e95b6e4-56b6-4f0b-8142-ac7adc984dbc
+' 
+5
+        dockerImage = '' 
+6
     }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                // Checkout code from your SCM
-                git 'https://github.com/mayssa14/Docker-Pipeline.git'
+7
+    agent any 
+8
+    stages { 
+9
+        stage('Cloning our Git') { 
+10
+            steps { 
+11
+                git 'https://github.com/mayssa14/Docker-Pipeline.git' 
+12
             }
-        }
-
-        stage('Build and Push Docker Image') {
-            steps {
-                // Build Docker image
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', '5e95b6e4-56b6-4f0b-8142-ac7adc984dbc') {
-                        def customImage = docker.build(DOCKER_IMAGE_NAME)
-                        customImage.push()
-                    }
+13
+        } 
+14
+        stage('Building our image') { 
+15
+            steps { 
+16
+                script { 
+17
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER" 
+18
                 }
-            }
+19
+            } 
+20
         }
+21
+        stage('Deploy our image') { 
+22
+            steps { 
+23
+                script { 
+24
+                    docker.withRegistry( '', registryCredential ) { 
+25
+                        dockerImage.push() 
+26
+                    }
+27
+                } 
+28
+            }
+29
+        } 
+30
+        stage('Cleaning up') { 
+31
+            steps { 
+32
+                sh "docker rmi $registry:$BUILD_NUMBER" 
+33
+            }
+34
+        } 
+35
     }
+36
 }
+
+
